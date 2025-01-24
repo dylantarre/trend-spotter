@@ -34,7 +34,9 @@ app.get('/api/trends', async (req, res) => {
       category: trend.category,
       platform: trend.platform,
       engagement: trend.current_engagement || trend.engagement,
-      previousEngagement: trend.engagement
+      previousEngagement: trend.engagement,
+      rank: trend.rank,
+      trendDirection: trend.trend_direction
     }));
 
     res.json({ results: mappedTrends });
@@ -46,14 +48,16 @@ app.get('/api/trends', async (req, res) => {
 
 app.post('/api/trends', async (req, res) => {
   try {
-    const { title, description, category, platform, engagement } = req.body;
+    const { title, description, category, platform, engagement, rank, trendDirection } = req.body;
     
     const id = addTrend({ 
       title, 
       description, 
       category, 
       platform, 
-      engagement 
+      engagement,
+      rank,
+      trend_direction: trendDirection
     });
 
     res.json({ id });

@@ -1,5 +1,5 @@
 import { TrendResult } from '../types';
-import { TrendingUp, TrendingDown, Hash, BarChart3, ExternalLink } from 'lucide-react';
+import { TrendingUp, Hash, BarChart3, ExternalLink } from 'lucide-react';
 
 interface TrendCardProps {
   trend: TrendResult;
@@ -11,11 +11,9 @@ function getTikTokSearchUrl(title: string): string {
 }
 
 export function TrendCard({ trend, previousEngagement }: TrendCardProps) {
-  const trendDirection = previousEngagement 
+  const isUpTrending = previousEngagement 
     ? trend.engagement && trend.engagement > previousEngagement
-      ? 'up'
-      : 'down'
-    : null;
+    : false;
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all p-5">
@@ -24,13 +22,9 @@ export function TrendCard({ trend, previousEngagement }: TrendCardProps) {
           <div className="flex items-center gap-2 mb-1.5">
             <h3 className="text-lg font-semibold text-gray-900">{trend.title}</h3>
             <div className="flex items-center space-x-2">
-              {trendDirection && (
-                <span className={`inline-flex items-center ${trendDirection === 'up' ? 'text-green-500' : 'text-red-500'}`}>
-                  {trendDirection === 'up' ? (
-                    <TrendingUp className="w-5 h-5" />
-                  ) : (
-                    <TrendingDown className="w-5 h-5" />
-                  )}
+              {isUpTrending && (
+                <span className="inline-flex items-center text-green-500">
+                  <TrendingUp className="w-5 h-5" />
                 </span>
               )}
               <a

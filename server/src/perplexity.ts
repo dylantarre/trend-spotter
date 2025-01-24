@@ -22,11 +22,11 @@ export async function searchTrends(
         messages: [
           {
             role: 'system',
-            content: 'You are a trend analysis expert. Return trending topics as a JSON array. Each trend should have: title, description, category, platform (always "TikTok"), and engagement (a number between 10000 and 1000000).'
+            content: 'You are a trend analysis expert. Return EXACTLY 10 of today\'s most current trending topics as a JSON array. Each trend should have: title, description, category, platform (always "TikTok"), and engagement (a number between 10000 and 1000000). Focus on trends that are actively viral today.'
           },
           {
             role: 'user',
-            content: `List current top TikTok ${category} trends. Return ONLY a JSON array with NO markdown or code blocks.`
+            content: `List exactly 10 of today's hottest TikTok ${category} trends that are currently viral. Return ONLY a JSON array with NO markdown or code blocks.`
           }
         ],
         max_tokens: 1024

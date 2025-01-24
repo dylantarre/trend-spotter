@@ -28,6 +28,8 @@ export interface TrendResult {
   platform: Platform;
   engagement: number;
   previousEngagement?: number;
+  rank: number;
+  trendDirection: 'upward' | 'downward';
 }
 
 export interface SearchResponse {

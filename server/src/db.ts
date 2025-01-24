@@ -14,6 +14,8 @@ export interface DBTrend {
   created_at: string;
   date: string;
   current_engagement?: number;
+  rank: number;
+  trend_direction: 'upward' | 'downward';
 }
 
 // Drop existing tables if they exist
@@ -32,7 +34,10 @@ db.exec(`
     platform TEXT NOT NULL,
     engagement INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    date TEXT DEFAULT (date('now', 'localtime')) NOT NULL
+    date TEXT DEFAULT (date('now', 'localtime')) NOT NULL,
+    rank INTEGER NOT NULL,
+    trend_direction TEXT NOT NULL CHECK (trend_direction IN ('upward', 'downward')),
+    UNIQUE(title, category)
   );
 
   CREATE TABLE trend_history (
@@ -95,13 +100,51 @@ export function getTrends(category?: string, date?: string): DBTrend[] {
 }
 
 export function addTrend(trend: Omit<DBTrend, 'id' | 'created_at' | 'date'>): number {
+  // First try to find if the trend already exists
+  const existing = db.prepare(`
+    SELECT id FROM trends 
+    WHERE title = ? AND category = ? AND date = date('now', 'localtime')
+  `).get(trend.title, trend.category) as { id: number } | undefined;
+
+  if (existing) {
+    // Update the existing trend
+    db.prepare(`
+      UPDATE trends 
+      SET description = ?, platform = ?, engagement = ?, rank = ?, trend_direction = ?
+      WHERE id = ?
+    `).run(
+      trend.description,
+      trend.platform,
+      trend.engagement,
+      trend.rank,
+      trend.trend_direction,
+      existing.id
+    );
+
+    // Add trend history entry
+    if (trend.engagement) {
+      addTrendHistory(existing.id, trend.engagement);
+    }
+
+    return existing.id;
+  }
+
+  // Insert new trend if it doesn't exist
   const result = db.prepare(`
-    INSERT INTO trends (title, description, category, platform, engagement, date)
-    VALUES (?, ?, ?, ?, ?, date('now', 'localtime'))
-  `).run(trend.title, trend.description, trend.category, trend.platform, trend.engagement);
+    INSERT INTO trends (title, description, category, platform, engagement, date, rank, trend_direction)
+    VALUES (?, ?, ?, ?, ?, date('now', 'localtime'), ?, ?)
+  `).run(
+    trend.title,
+    trend.description,
+    trend.category,
+    trend.platform,
+    trend.engagement,
+    trend.rank,
+    trend.trend_direction
+  );
 
   const trendId = result.lastInsertRowid as number;
-  
+
   // Add initial trend history entry
   if (trend.engagement) {
     addTrendHistory(trendId, trend.engagement);

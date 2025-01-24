@@ -39,7 +39,9 @@ async function populateFromPerplexity() {
         description: trend.description,
         category: trend.category,
         platform: trend.platform,
-        engagement: trend.engagement || 0
+        engagement: trend.engagement || 0,
+        rank: results.indexOf(trend) + 1,
+        trend_direction: Math.random() < 0.5 ? 'upward' : 'downward' // Randomly assign trend direction for demo data
       });
     }
 
