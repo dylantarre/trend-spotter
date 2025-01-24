@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { TrendResult, TrendCategory } from './types';
-import { searchTrends } from './api/perplexity';
+import { searchTrends } from './api/trends';
 import { TrendCard } from './components/TrendCard';
 import { CategoryPills } from './components/CategoryPills';
-import { TrendingUp, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
+import { TrendingUp, AlertCircle } from 'lucide-react';
 
 const TREND_CATEGORIES: TrendCategory[] = [
   'All',
@@ -33,43 +33,64 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState<TrendCategory>('All');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
 
-  async function fetchTrends() {
+  async function fetchTrends(category: TrendCategory) {
     // Cancel any ongoing requests
-    abortController?.abort();
+    if (abortController) {
+      abortController.abort();
+    }
+    
     const newController = new AbortController();
     setAbortController(newController);
     
     setLoading(true);
     setError(null);
-    setLoadingCategory(selectedCategory);
+    setLoadingCategory(category);
     
     try {
-      const { results, error } = await searchTrends(selectedCategory, newController.signal);
+      const { results, error } = await searchTrends(category, newController.signal);
+      
+      // Check if this request was aborted
+      if (newController.signal.aborted) {
+        return;
+      }
+      
       if (error) {
         setError(error);
       } else {
         setTrends(results);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to fetch trends');
+      // Only set error if request wasn't aborted
+      if (!newController.signal.aborted) {
+        setError(error instanceof Error ? error.message : 'Failed to fetch trends');
+      }
+    } finally {
+      // Only update loading states if this request wasn't aborted
+      if (!newController.signal.aborted) {
+        setLoading(false);
+        setLoadingCategory('');
+        setAbortController(null);
+      }
     }
-    
-    setLoading(false);
-    setLoadingCategory('');
-    setAbortController(null);
   }
 
   useEffect(() => {
-    fetchTrends();
+    fetchTrends(selectedCategory);
     return () => {
-      abortController?.abort();
+      if (abortController) {
+        abortController.abort();
+      }
     };
   }, [selectedCategory]);
+
+  const handleCategorySelect = (category: TrendCategory) => {
+    setSelectedCategory(category);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 pb-12">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center mb-8">
           <div className="flex items-center gap-3">
             <TrendingUp className="w-8 h-8 text-pink-500" />
             <div>
@@ -86,24 +107,12 @@ function App() {
               </p>
             </div>
           </div>
-          <button
-            onClick={fetchTrends}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow-md transition-all disabled:opacity-50 border border-gray-100"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <RefreshCw className="w-4 h-4" />
-            )}
-            Refresh
-          </button>
         </div>
 
         <CategoryPills
           categories={TREND_CATEGORIES}
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          onSelectCategory={handleCategorySelect}
         />
 
         {error ? (
@@ -128,8 +137,12 @@ function App() {
           </div>
         ) : (
           <div className="space-y-3">
-            {trends.map((trend, index) => (
-              <TrendCard key={index} trend={trend} />
+            {trends.map((trend) => (
+              <TrendCard
+                key={`${trend.title}-${trend.category}`}
+                trend={trend}
+                previousEngagement={trend.previousEngagement}
+              />
             ))}
           </div>
         )}

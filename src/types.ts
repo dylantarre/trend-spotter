@@ -17,11 +17,17 @@ export type TrendCategory =
   | 'Comedy'
   | 'Travel';
 
+export type Platform = 
+  | 'TikTok'
+  | 'Instagram'
+
 export interface TrendResult {
   title: string;
   description: string;
-  category: string;
-  engagement?: number;
+  category: TrendCategory;
+  platform: Platform;
+  engagement: number;
+  previousEngagement?: number;
 }
 
 export interface SearchResponse {

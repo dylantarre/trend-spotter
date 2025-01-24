@@ -1,39 +1,43 @@
-import { supabase } from './supabase';
-import type { TrendResult } from '../types';
+import { TrendResult } from '../types';
 
-export async function getTrendHistory(
+const API_URL = 'http://localhost:3001/api';
+
+export async function searchTrends(
   category?: string,
-  days: number = 7
-): Promise<TrendResult[]> {
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - days);
+  signal?: AbortSignal
+): Promise<{ results: TrendResult[]; error?: string }> {
+  try {
+    const params = new URLSearchParams();
+    if (category && category !== 'All') {
+      params.append('category', category);
+    }
 
-  let query = supabase
-    .from('trends')
-    .select(`
-      *,
-      trend_history (
-        engagement,
-        captured_at
-      )
-    `)
-    .gte('created_at', startDate.toISOString());
+    const response = await fetch(`${API_URL}/trends?${params}`, {
+      signal,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
 
-  if (category && category !== 'All') {
-    query = query.eq('category', category);
+    if (!response.ok) {
+      throw new Error('Failed to fetch trends');
+    }
+
+    const data = await response.json();
+    
+    // Sort trends by engagement
+    if (data.results) {
+      data.results.sort((a: TrendResult, b: TrendResult) => 
+        (b.engagement || 0) - (a.engagement || 0)
+      );
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching trends:', error);
+    return {
+      results: [],
+      error: error instanceof Error ? error.message : 'Failed to fetch trends'
+    };
   }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching trend history:', error);
-    throw new Error('Failed to fetch trend history');
-  }
-
-  return data.map(trend => ({
-    title: trend.title,
-    description: trend.description,
-    category: trend.category,
-    engagement: trend.trend_history?.[0]?.engagement || trend.engagement
-  }));
 }

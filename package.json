@@ -9,10 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "fetch-trends": "tsx scripts/fetch-trends.ts",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "server:populate": "cd server && npm run populate",
+    "server:dev": "cd server && npm run dev",
+    "server:scheduler": "cd server && npm run scheduler"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.7",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
