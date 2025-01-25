@@ -2,13 +2,14 @@
   "name": "trend-spotter-server",
   "version": "1.0.0",
   "description": "Backend server for trend-spotter application",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn src/server.ts",
-    "populate": "ts-node src/scripts/populate-from-perplexity.ts",
-    "scheduler": "ts-node src/scheduler/index.ts"
+    "dev": "node --loader ts-node/esm src/server.ts",
+    "populate": "node --loader ts-node/esm src/scripts/populate-from-perplexity.ts",
+    "scheduler": "node --loader ts-node/esm src/scheduler/index.ts"
   },
   "dependencies": {
     "better-sqlite3": "^9.0.0",

@@ -1,6 +1,6 @@
-import { searchTrends } from '../perplexity';
-import { addTrend } from '../db';
-import { TrendCategory } from '../../../src/types';
+import { searchTrends } from '../perplexity.js';
+import { addTrend } from '../db.js';
+import { TrendCategory } from '../../../src/types.js';
 
 const TREND_CATEGORIES: TrendCategory[] = [
   'Most Viral',
@@ -9,55 +9,69 @@ const TREND_CATEGORIES: TrendCategory[] = [
   'Comedy',
   'Music',
   'Fashion',
-  'Beauty',
-  'Challenges',
-  'Gaming',
-  'Tech',
-  'Business',
   'Educational',
   'Food',
   'DIY',
-  'Sports',
-  'Travel'
+  'Gaming',
+  'Tech',
+  'Business',
+  'Challenges'
 ];
 
 async function populateFromPerplexity() {
   console.log('Starting database population from Perplexity...');
 
   for (const category of TREND_CATEGORIES) {
-    console.log(`Fetching ${category} trends...`);
-    const { results, error } = await searchTrends(category);
-    
-    if (error) {
-      console.error(`Error fetching ${category}:`, error);
-      continue;
-    }
+    try {
+      console.log(`Fetching ${category} trends...`);
+      const { results, error } = await searchTrends(category);
+      
+      if (error) {
+        console.error(`Error fetching ${category}:`, error);
+        continue;
+      }
 
-    for (const trend of results) {
-      addTrend({
-        title: trend.title,
-        description: trend.description,
-        category: trend.category,
-        platform: trend.platform,
-        engagement: trend.engagement || 0,
-        rank: results.indexOf(trend) + 1,
-        trend_direction: Math.random() < 0.5 ? 'upward' : 'downward' // Randomly assign trend direction for demo data
-      });
-    }
+      if (!results || results.length === 0) {
+        console.log(`No results found for ${category}`);
+        continue;
+      }
 
-    console.log(`Added ${results.length} trends for ${category}`);
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Rate limiting
+      console.log(`Got ${results.length} results for ${category}`);
+
+      for (const trend of results) {
+        try {
+          addTrend({
+            title: trend.title,
+            description: trend.description,
+            category: category,
+            platform: trend.platform,
+            engagement: trend.engagement || 0,
+            rank: results.indexOf(trend) + 1,
+            trend_direction: trend.trendDirection || (Math.random() < 0.5 ? 'upward' : 'downward')
+          });
+        } catch (e) {
+          console.error(`Error adding trend: ${trend.title}`, e);
+        }
+      }
+
+      console.log(`Added ${results.length} trends for ${category}`);
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Rate limiting
+    } catch (e) {
+      console.error(`Error processing category ${category}:`, e);
+    }
   }
 
   console.log('Database population completed');
 }
 
 // Run if called directly
-if (require.main === module) {
-  populateFromPerplexity()
-    .then(() => process.exit(0))
-    .catch(error => {
-      console.error('Population failed:', error);
-      process.exit(1);
-    });
-} 
+console.log('Script starting...');
+populateFromPerplexity()
+  .then(() => {
+    console.log('Population completed successfully');
+    process.exit(0);
+  })
+  .catch(error => {
+    console.error('Population failed:', error);
+    process.exit(1);
+  }); 

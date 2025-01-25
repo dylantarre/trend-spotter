@@ -1,13 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import { TrendResult } from '../../src/types';
-import { getTrends, addTrend, getAvailableDates } from './db';
+import { getTrends, addTrend, getAvailableDates } from './db.js';
+import type { DBTrend } from './db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// CORS configuration
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Get available dates
@@ -28,7 +36,7 @@ app.get('/api/trends', async (req, res) => {
     const trends = getTrends(category as string, date as string);
     
     // Map DB trends to TrendResult format
-    const mappedTrends = trends.map(trend => ({
+    const mappedTrends = trends.map((trend: DBTrend) => ({
       title: trend.title,
       description: trend.description,
       category: trend.category,

@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
-import { Platform } from '../../src/types';
+import { Platform } from '../../src/types.js';
 
-// Drop existing database and create new one
+// Initialize database
 const db = new Database('trends.db');
 
 export interface DBTrend {
@@ -18,15 +18,9 @@ export interface DBTrend {
   trend_direction: 'upward' | 'downward';
 }
 
-// Drop existing tables if they exist
+// Initialize database with tables if they don't exist
 db.exec(`
-  DROP TABLE IF EXISTS trend_history;
-  DROP TABLE IF EXISTS trends;
-`);
-
-// Initialize database with tables
-db.exec(`
-  CREATE TABLE trends (
+  CREATE TABLE IF NOT EXISTS trends (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
@@ -40,7 +34,7 @@ db.exec(`
     UNIQUE(title, category)
   );
 
-  CREATE TABLE trend_history (
+  CREATE TABLE IF NOT EXISTS trend_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     trend_id INTEGER NOT NULL,
     engagement INTEGER NOT NULL,
@@ -49,14 +43,14 @@ db.exec(`
   );
 `);
 
-// Create indexes for better performance
+// Create indexes if they don't exist
 db.exec(`
-  CREATE INDEX idx_trends_platform ON trends(platform);
-  CREATE INDEX idx_trends_category ON trends(category);
-  CREATE INDEX idx_trends_created_at ON trends(created_at);
-  CREATE INDEX idx_trends_date ON trends(date);
-  CREATE INDEX idx_trend_history_trend_id ON trend_history(trend_id);
-  CREATE INDEX idx_trend_history_captured_at ON trend_history(captured_at);
+  CREATE INDEX IF NOT EXISTS idx_trends_platform ON trends(platform);
+  CREATE INDEX IF NOT EXISTS idx_trends_category ON trends(category);
+  CREATE INDEX IF NOT EXISTS idx_trends_created_at ON trends(created_at);
+  CREATE INDEX IF NOT EXISTS idx_trends_date ON trends(date);
+  CREATE INDEX IF NOT EXISTS idx_trend_history_trend_id ON trend_history(trend_id);
+  CREATE INDEX IF NOT EXISTS idx_trend_history_captured_at ON trend_history(captured_at);
 `);
 
 // Get available dates for trends
@@ -90,13 +84,15 @@ export function getTrends(category?: string, date?: string): DBTrend[] {
   
   const params: (string | undefined)[] = [date];
   if (category && category !== 'All') {
-    query += ` AND LOWER(t.category) = LOWER(?)`;
-    params.push(category);
+    query += ` AND (LOWER(t.category) = LOWER(?) OR ? = 'Most Viral')`;
+    params.push(category, category);
   }
   
-  query += ` ORDER BY t.created_at DESC`;
+  query += ` ORDER BY t.rank ASC`;
   
-  return db.prepare(query).all(...params) as DBTrend[];
+  const results = db.prepare(query).all(...params) as DBTrend[];
+  console.log(`Found ${results.length} trends for category: ${category || 'All'}, date: ${date || 'today'}`);
+  return results;
 }
 
 export function addTrend(trend: Omit<DBTrend, 'id' | 'created_at' | 'date'>): number {
