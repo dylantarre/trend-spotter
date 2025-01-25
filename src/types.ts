@@ -1,25 +1,25 @@
-export type TrendCategory = 
-  | 'All'
-  | 'Dance'
-  | 'Business'
-  | 'Memes'
-  | 'Music'
-  | 'Fashion'
-  | 'Challenges'
-  | 'Educational'
-  | 'Most Viral'
-  | 'Food'
-  | 'Gaming'
-  | 'DIY'
-  | 'Beauty'
-  | 'Tech'
-  | 'Sports'
-  | 'Comedy'
-  | 'Travel';
+export const TREND_CATEGORIES = [
+  'Dance',
+  'Business',
+  'Memes',
+  'Music',
+  'Fashion',
+  'Challenges',
+  'Educational',
+  'Most Viral',
+  'Food',
+  'Gaming',
+  'DIY',
+  'Beauty',
+  'Tech',
+  'Sports',
+  'Comedy',
+  'Travel'
+] as const;
 
-export type Platform = 
-  | 'TikTok'
-  | 'Instagram'
+export type TrendCategory = typeof TREND_CATEGORIES[number];
+
+export type Platform = 'TikTok';
 
 export interface TrendResult {
   title: string;
