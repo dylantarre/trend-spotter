@@ -4,16 +4,31 @@ import { TrendingUp, Hash, BarChart3, ExternalLink } from 'lucide-react';
 interface TrendCardProps {
   trend: TrendResult;
   previousEngagement?: number;
+  loading?: boolean;
 }
 
 function getTikTokSearchUrl(title: string): string {
   return `https://www.tiktok.com/search?q=${encodeURIComponent(title)}`;
 }
 
-export function TrendCard({ trend, previousEngagement }: TrendCardProps) {
+export function TrendCard({ trend, previousEngagement, loading }: TrendCardProps) {
   const isUpTrending = previousEngagement 
     ? trend.engagement && trend.engagement > previousEngagement
     : false;
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm p-5 animate-pulse">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+            <div className="h-3 bg-gray-100 rounded w-1/4"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all p-5">

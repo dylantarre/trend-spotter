@@ -1,10 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M22 7L13.5 15.5L8.5 10.5L2 17" stroke="#ec4899" fill="none"/>
-  <path d="M16 7H22V13" stroke="#ec4899" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF0000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M22 7L13.5 15.5L8.5 10.5L2 17" stroke="#FF0000" fill="none"/>
+  <path d="M16 7H22V13" stroke="#FF0000" fill="none"/>
+  <circle cx="12" cy="12" r="3" stroke="#FF0000" fill="none"/>
   <style>
-    path { stroke: #ec4899; }
+    path, circle { stroke: #FF0000; }
     @media (prefers-color-scheme: dark) {
-      path { stroke: #fb7185; }
+      path, circle { stroke: #FF0000; }
     }
   </style>
 </svg> 

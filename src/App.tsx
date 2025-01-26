@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { TrendResult, TrendCategory } from './types';
-import { searchTrends } from './api/trends';
+import { useState } from 'react';
+import { TrendCategory } from './types';
 import { TrendCard } from './components/TrendCard';
 import { CategoryPills } from './components/CategoryPills';
 import { TrendingUp, AlertCircle } from 'lucide-react';
+import { useTrendsCache } from './hooks/useTrendsCache';
 
 const TREND_CATEGORIES: TrendCategory[] = [
   'All',
@@ -13,75 +13,18 @@ const TREND_CATEGORIES: TrendCategory[] = [
   'Comedy',
   'Music',
   'Fashion',
-  'Beauty',
-  'Challenges',
-  'Gaming',
-  'Tech',
-  'Business',
   'Educational',
   'Food',
   'DIY',
-  'Sports',
-  'Travel'
+  'Gaming',
+  'Tech',
+  'Business',
+  'Challenges'
 ];
 
 function App() {
-  const [trends, setTrends] = useState<TrendResult[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingCategory, setLoadingCategory] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<TrendCategory>('All');
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
-
-  async function fetchTrends(category: TrendCategory) {
-    // Cancel any ongoing requests
-    if (abortController) {
-      abortController.abort();
-    }
-    
-    const newController = new AbortController();
-    setAbortController(newController);
-    
-    setLoading(true);
-    setError(null);
-    setLoadingCategory(category);
-    
-    try {
-      const { results, error } = await searchTrends(category, newController.signal);
-      
-      // Check if this request was aborted
-      if (newController.signal.aborted) {
-        return;
-      }
-      
-      if (error) {
-        setError(error);
-      } else {
-        setTrends(results);
-      }
-    } catch (error) {
-      // Only set error if request wasn't aborted
-      if (!newController.signal.aborted) {
-        setError(error instanceof Error ? error.message : 'Failed to fetch trends');
-      }
-    } finally {
-      // Only update loading states if this request wasn't aborted
-      if (!newController.signal.aborted) {
-        setLoading(false);
-        setLoadingCategory('');
-        setAbortController(null);
-      }
-    }
-  }
-
-  useEffect(() => {
-    fetchTrends(selectedCategory);
-    return () => {
-      if (abortController) {
-        abortController.abort();
-      }
-    };
-  }, [selectedCategory]);
+  const { trends, loading, error, loadingCategory } = useTrendsCache(selectedCategory);
 
   const handleCategorySelect = (category: TrendCategory) => {
     setSelectedCategory(category);
@@ -122,28 +65,33 @@ function App() {
               <p>{error}</p>
             </div>
           </div>
-        ) : loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
-              >
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
-                <div className="h-3 bg-gray-100 rounded w-1/4"></div>
-              </div>
-            ))}
-          </div>
         ) : (
           <div className="space-y-3">
+            {/* Show cached results immediately while loading new ones */}
             {trends.map((trend) => (
               <TrendCard
                 key={`${trend.title}-${trend.category}`}
                 trend={trend}
                 previousEngagement={trend.previousEngagement}
+                loading={loading}
               />
             ))}
+            
+            {/* Show loading placeholders only when no cached data */}
+            {loading && !trends.length && (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
+                  >
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div className="h-3 bg-gray-100 rounded w-1/4"></div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
