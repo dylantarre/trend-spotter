@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 server/trends.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
