@@ -28,6 +28,7 @@ export interface TrendResult {
   previousEngagement?: number;
   rank: number;
   trendDirection: 'upward' | 'downward';
+  imageUrl?: string;
 }
 
 export interface SearchResponse {
