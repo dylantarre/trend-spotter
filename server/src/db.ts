@@ -31,7 +31,7 @@ db.exec(`
     date TEXT DEFAULT (date('now', 'localtime')) NOT NULL,
     rank INTEGER NOT NULL,
     trend_direction TEXT NOT NULL CHECK (trend_direction IN ('upward', 'downward')),
-    UNIQUE(title, category)
+    UNIQUE(title, category, date)
   );
 
   CREATE TABLE IF NOT EXISTS trend_history (

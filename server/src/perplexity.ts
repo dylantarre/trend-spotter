@@ -25,11 +25,23 @@ export async function searchTrends(
         messages: [
           {
             role: 'system',
-            content: 'You are a trend analysis expert. Return EXACTLY 10 of today\'s most current trending topics as a JSON array. Each trend should have: title, description, category, platform (always "TikTok"), engagement (a number between 10000 and 1000000), rank (1-10), and trendDirection ("upward" or "downward"). Focus on trends that are actively viral today.'
+            content: `You are a trend analysis expert. You must return a JSON array with EXACTLY this structure for each trend:
+[
+  {
+    "title": "string",
+    "description": "string",
+    "category": "string",
+    "platform": "TikTok",
+    "engagement": number,
+    "rank": number,
+    "trendDirection": "upward" or "downward"
+  }
+]
+Return EXACTLY 10 trends. No explanations, no markdown, no code blocks - just the raw JSON array.`
           },
           {
             role: 'user',
-            content: `List exactly 10 of today's hottest TikTok ${category} trends that are currently viral. Include their rank and whether they are on an upward or downward trend. Return ONLY a JSON array with NO markdown or code blocks.`
+            content: `Return exactly 10 current TikTok ${category} trends as a raw JSON array. Each trend must have all required fields: title, description, category, platform (always "TikTok"), engagement (number between 10000-1000000), rank (1-10), and trendDirection ("upward" or "downward"). Return ONLY the JSON array - no other text, no markdown, no formatting.`
           }
         ],
         max_tokens: 1024
@@ -51,19 +63,84 @@ export async function searchTrends(
       throw new Error('Invalid API response format');
     }
     
-    const content = data.choices[0].message.content.trim();
+    let content = data.choices[0].message.content.trim();
     console.log('Raw Content:', content);
     
-    // Remove any markdown code block markers if present
-    const cleanContent = content.replace(/^```json\n|\n```$/g, '');
-    console.log('Cleaned Content:', cleanContent);
+    // More robust cleaning of the content
+    content = content
+      // Remove any markdown code block markers
+      .replace(/```(?:json)?\s*/g, '')
+      // Remove any text before the first [
+      .replace(/^[^[]*(\[)/s, '$1')
+      // Remove any text after the last ]
+      .replace(/]([\s\S]*?)$/s, ']')
+      // Remove any line breaks or extra whitespace
+      .replace(/\n\s*/g, ' ')
+      // Clean up any remaining whitespace
+      .trim();
+    
+    console.log('Cleaned Content:', content);
     
     try {
-      const parsedResults = JSON.parse(cleanContent);
-      console.log('Successfully parsed results:', parsedResults.length, 'items');
-      return { results: parsedResults };
-    } catch (error) {
-      console.error('Failed to parse response:', cleanContent);
+      // First try to parse as is
+      let parsedResults;
+      try {
+        parsedResults = JSON.parse(content);
+      } catch (initialError) {
+        console.log('Initial parse failed:', initialError);
+        console.log('Attempting additional cleaning...');
+        // If that fails, try additional cleaning
+        content = content
+          // Remove any trailing commas before closing brackets
+          .replace(/,(\s*[\]}])/g, '$1')
+          // Ensure property names are properly quoted
+          .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3');
+        console.log('Additional cleaning result:', content);
+        parsedResults = JSON.parse(content);
+      }
+      
+      // Validate the results
+      if (!Array.isArray(parsedResults)) {
+        throw new Error('Response is not an array');
+      }
+
+      // Strict validation of each trend object
+      const requiredFields = ['title', 'description', 'platform', 'engagement', 'rank', 'trendDirection'];
+      parsedResults.forEach((trend, index) => {
+        requiredFields.forEach(field => {
+          if (!(field in trend)) {
+            throw new Error(`Missing required field "${field}" in trend at index ${index}`);
+          }
+        });
+        
+        if (typeof trend.engagement !== 'number') {
+          throw new Error(`Invalid engagement value in trend at index ${index}: must be a number`);
+        }
+        
+        if (typeof trend.rank !== 'number' || trend.rank < 1 || trend.rank > 10) {
+          throw new Error(`Invalid rank value in trend at index ${index}: must be a number between 1 and 10`);
+        }
+        
+        if (!['upward', 'downward'].includes(trend.trendDirection)) {
+          throw new Error(`Invalid trendDirection in trend at index ${index}: must be "upward" or "downward"`);
+        }
+      });
+      
+      // Ensure each trend has the required fields and proper types
+      const validatedResults: TrendResult[] = parsedResults.map(trend => ({
+        title: String(trend.title || ''),
+        description: String(trend.description || ''),
+        category: category,
+        platform: 'TikTok' as const,
+        engagement: Number(trend.engagement) || 10000,
+        rank: Number(trend.rank) || 1,
+        trendDirection: trend.trendDirection === 'downward' ? 'downward' : 'upward'
+      }));
+
+      console.log('Successfully parsed results:', validatedResults.length, 'items');
+      return { results: validatedResults };
+    } catch (parseError) {
+      console.error('Failed to parse response:', content, '\nError:', parseError);
       throw new Error('Invalid JSON response from API');
     }
   } catch (error) {

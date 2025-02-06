@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { getTrends, addTrend, getAvailableDates, addNewsletterSignup } from './db.js';
 import type { DBTrend } from './db.js';
+import './scheduler.js';  // Import scheduler to run on server start
 
 const app = express();
 const PORT = process.env.PORT || 3001;

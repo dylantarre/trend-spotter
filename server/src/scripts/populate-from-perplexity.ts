@@ -4,21 +4,20 @@ import { TrendCategory } from '../../../src/types.js';
 
 const TREND_CATEGORIES: TrendCategory[] = [
   'Most Viral',
-  'Dance',
   'Memes',
-  'Comedy',
+  'Challenges',
+  'Dance',
   'Music',
   'Fashion',
-  'Educational',
+  'Beauty',
   'Food',
+  'Sports',
   'DIY',
-  'Gaming',
-  'Tech',
-  'Business',
-  'Challenges'
+  'Comedy',
+  'Lifestyle'
 ];
 
-async function populateFromPerplexity() {
+export async function populateFromPerplexity(): Promise<void> {
   console.log('Starting database population from Perplexity...');
 
   for (const category of TREND_CATEGORIES) {
@@ -65,13 +64,15 @@ async function populateFromPerplexity() {
 }
 
 // Run if called directly
-console.log('Script starting...');
-populateFromPerplexity()
-  .then(() => {
-    console.log('Population completed successfully');
-    process.exit(0);
-  })
-  .catch(error => {
-    console.error('Population failed:', error);
-    process.exit(1);
-  }); 
+if (import.meta.url === new URL(import.meta.url).href) {
+  console.log('Script starting...');
+  populateFromPerplexity()
+    .then(() => {
+      console.log('Population completed successfully');
+      process.exit(0);
+    })
+    .catch((error: Error) => {
+      console.error('Population failed:', error);
+      process.exit(1);
+    });
+} 
