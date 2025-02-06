@@ -1,18 +1,17 @@
 export const TREND_CATEGORIES = [
   'All',
   'Most Viral',
-  'Dance',
   'Memes',
-  'Comedy',
+  'Challenges',
+  'Dance',
   'Music',
   'Fashion',
-  'Educational',
+  'Beauty',
   'Food',
+  'Sports',
   'DIY',
-  'Gaming',
-  'Tech',
-  'Business',
-  'Challenges'
+  'Comedy',
+  'Lifestyle'
 ] as const;
 
 export type TrendCategory = typeof TREND_CATEGORIES[number];

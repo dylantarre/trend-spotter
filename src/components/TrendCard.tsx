@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendResult, TrendCategory } from '../types';
-import { TrendingUp, Hash, BarChart3, ExternalLink, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import { TrendingUp, Hash, BarChart3, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { NewsletterSignup } from './NewsletterSignup';
 
 interface TrendCardProps {
   trend: TrendResult;
@@ -12,26 +13,25 @@ function getTikTokSearchUrl(title: string): string {
   return `https://www.tiktok.com/search?q=${encodeURIComponent(title)}`;
 }
 
-// Default image based on category
-function getDefaultImage(category: TrendCategory): string {
+const getDefaultImage = (category: TrendCategory): string => {
   const images: Record<TrendCategory, string> = {
-    'All': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop',
-    'Most Viral': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop',
-    'Dance': 'https://images.unsplash.com/photo-1535525153412-5a42439a210d?w=800&auto=format&fit=crop',
-    'Memes': 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&auto=format&fit=crop',
-    'Comedy': 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&auto=format&fit=crop',
-    'Music': 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=800&auto=format&fit=crop',
-    'Fashion': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop',
-    'Educational': 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop',
-    'Food': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&auto=format&fit=crop',
-    'DIY': 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800&auto=format&fit=crop',
-    'Gaming': 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop',
-    'Tech': 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop',
-    'Business': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop',
-    'Challenges': 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop'
+    'All': 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974&auto=format&fit=crop',
+    'Most Viral': 'https://images.unsplash.com/photo-1579869847514-7c1a19d2d2ad?q=80&w=2034&auto=format&fit=crop',
+    'Memes': 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?q=80&w=2000&auto=format&fit=crop',
+    'Challenges': 'https://images.unsplash.com/photo-1552058544-f2b08422138a?q=80&w=1998&auto=format&fit=crop',
+    'Dance': 'https://images.unsplash.com/photo-1547153760-18fc86324498?q=80&w=1974&auto=format&fit=crop',
+    'Music': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop',
+    'Fashion': 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop',
+    'Beauty': 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=2087&auto=format&fit=crop',
+    'Food': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop',
+    'Sports': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=2070&auto=format&fit=crop',
+    'DIY': 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?q=80&w=1770&auto=format&fit=crop',
+    'Comedy': 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?q=80&w=2071&auto=format&fit=crop',
+    'Lifestyle': 'https://images.unsplash.com/photo-1600618528240-fb9fc964b853?q=80&w=2070&auto=format&fit=crop'
   };
+  
   return images[category];
-}
+};
 
 export function TrendCard({ trend, previousEngagement, loading }: TrendCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -122,22 +122,8 @@ export function TrendCard({ trend, previousEngagement, loading }: TrendCardProps
           </div>
 
           {/* Newsletter Signup Section */}
-          <div className="p-5 bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 border-y border-pink-100">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Bell className="w-5 h-5 text-pink-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Discover More Trends Like This</h2>
-                </div>
-                <p className="text-gray-600 text-sm">
-                  Get weekly insights on emerging trends and viral content strategies.
-                  Join our community of trend-spotting creators!
-                </p>
-              </div>
-              <div className="w-full md:w-auto">
-                <div className="ml-embedded" data-form="WRVpg5"></div>
-              </div>
-            </div>
+          <div className="border-y border-pink-100">
+            <NewsletterSignup trendCategory={trend.category} />
           </div>
 
           <div className="p-5 bg-gray-50">
