@@ -41,6 +41,15 @@ db.exec(`
     captured_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (trend_id) REFERENCES trends(id)
   );
+
+  CREATE TABLE IF NOT EXISTS newsletter_signups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    name TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    source TEXT,
+    trend_category TEXT
+  );
 `);
 
 // Create indexes if they don't exist
@@ -51,6 +60,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_trends_date ON trends(date);
   CREATE INDEX IF NOT EXISTS idx_trend_history_trend_id ON trend_history(trend_id);
   CREATE INDEX IF NOT EXISTS idx_trend_history_captured_at ON trend_history(captured_at);
+  CREATE INDEX IF NOT EXISTS idx_newsletter_signups_email ON newsletter_signups(email);
+  CREATE INDEX IF NOT EXISTS idx_newsletter_signups_created_at ON newsletter_signups(created_at);
 `);
 
 // Get available dates for trends
@@ -154,6 +165,42 @@ export function addTrendHistory(trendId: number, engagement: number): void {
     INSERT INTO trend_history (trend_id, engagement)
     VALUES (?, ?)
   `).run(trendId, engagement);
+}
+
+export interface NewsletterSignup {
+  email: string;
+  name?: string;
+  source?: string;
+  trendCategory?: string;
+}
+
+export function addNewsletterSignup(signup: NewsletterSignup): number {
+  try {
+    const result = db.prepare(`
+      INSERT INTO newsletter_signups (email, name, source, trend_category)
+      VALUES (?, ?, ?, ?)
+    `).run(
+      signup.email,
+      signup.name || null,
+      signup.source || null,
+      signup.trendCategory || null
+    );
+
+    return result.lastInsertRowid as number;
+  } catch (error) {
+    if ((error as any).code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      throw new Error('Email already subscribed');
+    }
+    throw error;
+  }
+}
+
+export function getNewsletterSignups(): NewsletterSignup[] {
+  return db.prepare(`
+    SELECT email, name, source, trend_category as trendCategory
+    FROM newsletter_signups
+    ORDER BY created_at DESC
+  `).all() as NewsletterSignup[];
 }
 
 export default db; 

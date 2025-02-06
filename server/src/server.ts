@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { getTrends, addTrend, getAvailableDates } from './db.js';
+import { getTrends, addTrend, getAvailableDates, addNewsletterSignup } from './db.js';
 import type { DBTrend } from './db.js';
 
 const app = express();
@@ -72,6 +72,32 @@ app.post('/api/trends', async (req, res) => {
   } catch (error) {
     console.error('Error adding trend:', error);
     res.status(500).json({ error: 'Failed to add trend' });
+  }
+});
+
+// Newsletter signup endpoint
+app.post('/api/newsletter/signup', async (req, res) => {
+  try {
+    const { email, name, source, trendCategory } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const id = addNewsletterSignup({ 
+      email,
+      name,
+      source,
+      trendCategory
+    });
+
+    res.json({ id, message: 'Successfully subscribed to newsletter' });
+  } catch (error) {
+    console.error('Error adding newsletter signup:', error);
+    if (error instanceof Error && error.message === 'Email already subscribed') {
+      return res.status(409).json({ error: 'Email already subscribed' });
+    }
+    res.status(500).json({ error: 'Failed to subscribe to newsletter' });
   }
 });
 
